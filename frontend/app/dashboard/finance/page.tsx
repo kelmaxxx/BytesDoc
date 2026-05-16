@@ -1,6 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+export const dynamic = 'force-dynamic'
+
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/lib/stores/authStore'
 import { useDocumentStore } from '@/lib/stores/documentStore'
@@ -18,6 +20,14 @@ import { FileText, DollarSign, Upload } from 'lucide-react'
 import { Document } from '@/types'
 
 export default function FinanceDashboard() {
+  return (
+    <Suspense fallback={null}>
+      <FinanceDashboardContent />
+    </Suspense>
+  )
+}
+
+function FinanceDashboardContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const tab = searchParams.get('tab') || 'dashboard'
