@@ -340,12 +340,12 @@ function AdminDashboardContent() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b dark:border-gray-700">
-                    <th className="text-left py-3 px-4 text-gray-900 dark:text-white">Title</th>
-                    <th className="text-left py-3 px-4 text-gray-900 dark:text-white">Category</th>
-                    <th className="text-left py-3 px-4 text-gray-900 dark:text-white">Uploader</th>
-                    <th className="text-left py-3 px-4 text-gray-900 dark:text-white">Date</th>
-                    <th className="text-left py-3 px-4 text-gray-900 dark:text-white">Action</th>
+                  <tr className="border-b border-border-subtle dark:border-white/5 bg-gray-50/80 dark:bg-gray-900/40">
+                    <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Title</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Category</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Uploader</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Date</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Action</th>
                   </tr>
                 </thead>
                 <tbody>

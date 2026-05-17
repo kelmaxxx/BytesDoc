@@ -26,11 +26,11 @@ export default function UserTable({ users, onRoleChange }: UserTableProps) {
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-x-auto">
       <table className="w-full">
         <thead>
-          <tr className="border-b dark:border-gray-700">
-            <th className="text-left py-3 px-4 text-gray-900 dark:text-white">Email</th>
-            <th className="text-left py-3 px-4 text-gray-900 dark:text-white">Full Name</th>
-            <th className="text-left py-3 px-4 text-gray-900 dark:text-white">Role</th>
-            <th className="text-left py-3 px-4 text-gray-900 dark:text-white">Created At</th>
+          <tr className="border-b border-border-subtle dark:border-white/5 bg-gray-50/80 dark:bg-gray-900/40">
+            <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Email</th>
+            <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Full Name</th>
+            <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Role</th>
+            <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Created At</th>
           </tr>
         </thead>
         <tbody>

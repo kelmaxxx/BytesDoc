@@ -80,11 +80,11 @@ export default function ActivityLogTable({
         ) : (
         <table className="w-full">
           <thead>
-            <tr className="border-b dark:border-gray-700">
-              <th className="text-left py-3 px-4 text-gray-900 dark:text-white">User</th>
-              <th className="text-left py-3 px-4 text-gray-900 dark:text-white">Action</th>
-              <th className="text-left py-3 px-4 text-gray-900 dark:text-white">Document</th>
-              <th className="text-left py-3 px-4 text-gray-900 dark:text-white">Timestamp</th>
+            <tr className="border-b border-border-subtle dark:border-white/5 bg-gray-50/80 dark:bg-gray-900/40">
+              <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">User</th>
+              <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Action</th>
+              <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Document</th>
+              <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Timestamp</th>
             </tr>
           </thead>
           <tbody>
