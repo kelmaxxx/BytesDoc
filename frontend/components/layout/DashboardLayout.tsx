@@ -21,7 +21,7 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children, tabs, activeTab }: DashboardLayoutProps) {
-  const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
   const { user, logout } = useAuthStore()
   const router = useRouter()
@@ -32,19 +32,48 @@ export default function DashboardLayout({ children, tabs, activeTab }: Dashboard
     router.push('/login')
   }
 
+  const closeDrawer = () => setDrawerOpen(false)
+
   return (
     <div className="min-h-screen bg-[#f5f5f5] dark:bg-gray-900 transition-colors duration-300 lg:flex">
-      {/* DESKTOP SIDEBAR (lg+) */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-[220px] lg:shrink-0 lg:h-screen lg:sticky lg:top-0 bg-[#1a1a1a] text-white border-r border-white/10">
-        <div className="px-5 py-4 flex items-center gap-3 border-b border-white/10">
-          <Image
-            src="/byteslogo1.png"
-            alt="BYTES Logo"
-            width={32}
-            height={32}
-            className="rounded-sm"
-          />
-          <h1 className="text-base font-bold tracking-tighter uppercase">BytesDoc</h1>
+      {/* BACKDROP (visible only when drawer is open on < lg) */}
+      {drawerOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+          onClick={closeDrawer}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* SIDEBAR — off-canvas drawer on < lg, always-visible on lg+ */}
+      <aside
+        className={`
+          fixed lg:sticky top-0 left-0 z-50 lg:z-auto
+          h-screen w-[260px] lg:w-[220px] lg:shrink-0
+          bg-[#1a1a1a] text-white border-r border-white/10
+          flex flex-col
+          transition-transform duration-300 ease-out
+          ${drawerOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'}
+        `}
+      >
+        <div className="px-5 py-4 flex items-center justify-between gap-3 border-b border-white/10">
+          <div className="flex items-center gap-3 min-w-0">
+            <Image
+              src="/byteslogo1.png"
+              alt="BYTES Logo"
+              width={32}
+              height={32}
+              className="rounded-sm shrink-0"
+            />
+            <h1 className="text-base font-bold tracking-tighter uppercase truncate">BytesDoc</h1>
+          </div>
+          <button
+            onClick={closeDrawer}
+            className="lg:hidden p-1.5 rounded-md hover:bg-white/10 text-gray-300"
+            aria-label="Close navigation"
+          >
+            <X size={18} />
+          </button>
         </div>
 
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
@@ -52,6 +81,7 @@ export default function DashboardLayout({ children, tabs, activeTab }: Dashboard
             <Link
               key={tab.name}
               href={tab.href}
+              onClick={closeDrawer}
               className={`block px-3 py-2 rounded-md text-sm font-medium transition-all ${
                 activeTab === tab.name
                   ? 'bg-white text-black'
@@ -88,49 +118,31 @@ export default function DashboardLayout({ children, tabs, activeTab }: Dashboard
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between h-16 lg:h-14">
               {/* Left side */}
-              <div className="flex items-center min-w-0">
-                {/* Hamburger (< md only) */}
+              <div className="flex items-center min-w-0 gap-3">
                 <button
-                  onClick={() => setMobileNavOpen(!mobileNavOpen)}
-                  className="md:hidden mr-4"
-                  aria-label="Toggle navigation"
+                  onClick={() => setDrawerOpen(true)}
+                  className="lg:hidden p-1.5 -ml-1 rounded-md hover:bg-white/10 transition"
+                  aria-label="Open navigation"
                 >
-                  {mobileNavOpen ? <X /> : <Menu />}
+                  <Menu size={22} />
                 </button>
 
-                {/* Logo (< lg only — sidebar has it on lg+) */}
-                <div className="flex items-center space-x-3 lg:hidden">
+                {/* Logo (< lg only — sidebar shows logo on lg+) */}
+                <div className="flex items-center gap-3 lg:hidden">
                   <Image
                     src="/byteslogo1.png"
                     alt="BYTES Logo"
-                    width={35}
-                    height={35}
+                    width={32}
+                    height={32}
                     className="rounded-sm"
                   />
-                  <h1 className="text-xl font-bold tracking-tighter uppercase">BytesDoc</h1>
+                  <h1 className="text-lg font-bold tracking-tighter uppercase">BytesDoc</h1>
                 </div>
 
                 {/* Page title (lg+ only) */}
                 <h2 className="hidden lg:block text-sm font-semibold text-white truncate">
                   {activeTab}
                 </h2>
-              </div>
-
-              {/* Horizontal tabs (md to lg-1 only — sidebar has them on lg+) */}
-              <div className="hidden md:flex lg:hidden space-x-2">
-                {tabs.map((tab) => (
-                  <Link
-                    key={tab.name}
-                    href={tab.href}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                      activeTab === tab.name
-                        ? 'bg-white text-black'
-                        : 'text-gray-400 hover:text-white hover:bg-white/10'
-                    }`}
-                  >
-                    {tab.name}
-                  </Link>
-                ))}
               </div>
 
               {/* Right side */}
@@ -155,48 +167,17 @@ export default function DashboardLayout({ children, tabs, activeTab }: Dashboard
                   {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
                 </button>
 
-                {/* User info (< lg only — sidebar has it on lg+) */}
+                {/* User info (< lg only — sidebar shows it on lg+) */}
                 <div className="hidden sm:flex lg:hidden flex-col items-end mr-2">
                   <span className="text-xs font-bold text-white leading-none">{user?.fullName}</span>
                   <span className="text-[10px] text-gray-400 uppercase tracking-widest">
                     {user?.role?.replace('_', ' ')}
                   </span>
                 </div>
-
-                {/* Logout (< lg only — sidebar has it on lg+) */}
-                <button
-                  onClick={handleLogout}
-                  className="lg:hidden flex items-center space-x-2 bg-red-600/10 hover:bg-red-600 text-red-500 hover:text-white px-3 py-2 rounded-lg transition-all border border-red-600/20"
-                >
-                  <LogOut size={18} />
-                  <span className="hidden md:inline text-xs font-bold uppercase">Logout</span>
-                </button>
               </div>
             </div>
           </div>
         </nav>
-
-        {/* Mobile hamburger drawer (< md only) */}
-        {mobileNavOpen && (
-          <div className="md:hidden bg-[#1a1a1a] border-b border-white/10 text-white">
-            <div className="container mx-auto px-4 py-4 space-y-2">
-              {tabs.map((tab) => (
-                <Link
-                  key={tab.name}
-                  href={tab.href}
-                  className={`block px-3 py-2 rounded-md ${
-                    activeTab === tab.name
-                      ? 'bg-white text-black font-bold'
-                      : 'text-gray-300 hover:bg-white/5'
-                  }`}
-                  onClick={() => setMobileNavOpen(false)}
-                >
-                  {tab.name}
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
 
         <main className="container mx-auto px-4 py-8">
           {children}
