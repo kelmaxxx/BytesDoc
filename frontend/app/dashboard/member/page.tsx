@@ -16,7 +16,7 @@ import ArchiveList from '@/components/dashboard/ArchiveList'
 import DocumentViewerModal from '@/components/dashboard/DocumentViewerModal'
 import { FileText, Archive } from 'lucide-react'
 import { Document } from '@/types'
-import { mockCategories } from '@/lib/mockData'
+import { useCategoryStore } from '@/lib/stores/categoryStore'
 import { toast } from '@/lib/stores/toastStore'
 
 export default function MemberDashboard() {
@@ -36,6 +36,9 @@ function MemberDashboardContent() {
   const { documents } = useDocumentStore()
   const { users } = useUserStore()
   const { addLog } = useActivityStore()
+  const { categories, ensureLoaded: ensureCategoriesLoaded } = useCategoryStore()
+
+  useEffect(() => { ensureCategoriesLoaded() }, [ensureCategoriesLoaded])
 
   const [searchTerm, setSearchTerm] = useState('')
   const [viewModalOpen, setViewModalOpen] = useState(false)
@@ -84,16 +87,16 @@ function MemberDashboardContent() {
   const archivedDocs = documents.filter(d => d.is_archived).length
   const recentDocs = documents.filter(d => !d.is_archived).slice(0, 5)
 
-  const categoryData = mockCategories.map(c => ({
-    name: c,
-    value: documents.filter(d => d.category === c && !d.is_archived).length,
+  const categoryData = categories.map(c => ({
+    name: c.name,
+    value: documents.filter(d => d.category === c.name && !d.is_archived).length,
   }))
 
   return (
     <DashboardLayout tabs={tabs} activeTab={tab === 'documents' ? 'Documents' : tab === 'archive' ? 'Archive' : 'Dashboard'}>
       {tab === 'dashboard' && (
         <div className="space-y-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Member Dashboard</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Member Dashboard</h1>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card title="Accessible Documents" value={totalDocs} icon={<FileText size={32} />} />
@@ -135,7 +138,7 @@ function MemberDashboardContent() {
 
       {tab === 'documents' && (
         <div className="space-y-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Documents (View Only)</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Documents</h1>
 
           <input
             type="text"
@@ -160,7 +163,7 @@ function MemberDashboardContent() {
 
       {tab === 'archive' && (
         <div className="space-y-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Archive (View Only)</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Archive</h1>
           <ArchiveList
             documents={filteredDocs}
             onView={handleView}

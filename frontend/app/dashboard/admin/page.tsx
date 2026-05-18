@@ -1,6 +1,6 @@
 'use client'
 
-
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/lib/stores/authStore'
 import { useDocumentStore } from '@/lib/stores/documentStore'
@@ -18,9 +18,11 @@ import DocumentViewerModal from '@/components/dashboard/DocumentViewerModal'
 import UploadModal from '@/components/dashboard/UploadModal'
 import UserTable from '@/components/dashboard/UserTable'
 import ActivityLogTable from '@/components/dashboard/ActivityLogTable'
-import AdministrationsPanel from '@/components/dashboard/AdministrationsPanel'
-import FileTypeIcon from '@/components/ui/FileTypeIcon'
+import DocumentSettingsPanel from '@/components/dashboard/DocumentSettingsPanel'
+import { FileTypeBadge } from '@/components/ui/FileTypeIcon'
 import { useAdministrationStore } from '@/lib/stores/administrationStore'
+import { useCategoryStore } from '@/lib/stores/categoryStore'
+import { useEventStore } from '@/lib/stores/eventStore'
 import { FileText, Archive, Upload, Users, Activity, Download } from 'lucide-react'
 import { Document, User } from '@/types'
 import { apiGetDashboardStats, DashboardStats } from '@/lib/api'
@@ -32,7 +34,7 @@ const TABS = [
   { name: 'Dashboard', href: '/dashboard/admin' },
   { name: 'Documents', href: '/dashboard/admin?tab=documents' },
   { name: 'Archive', href: '/dashboard/admin?tab=archive' },
-  { name: 'Administrations', href: '/dashboard/admin?tab=administrations' },
+  { name: 'Document Settings', href: '/dashboard/admin?tab=settings' },
   { name: 'Users', href: '/dashboard/admin?tab=users' },
   { name: 'Activity Logs', href: '/dashboard/admin?tab=logs' },
 ]
@@ -53,6 +55,7 @@ function AdminDashboardContent() {
   const { user, isAuthenticated, usingMock, hasHydrated } = useAuthStore()
   const {
     documents,
+    loading: documentsLoading,
     fetchDocuments,
     addDocument,
     updateDocument,
@@ -64,6 +67,8 @@ function AdminDashboardContent() {
   const { users, fetchUsers, updateUserRole, inviteUser } = useUserStore()
   const { logs, remoteLogs, fetchLogs, exportLogs } = useActivityStore()
   const { administrations, ensureLoaded: ensureAdminsLoaded } = useAdministrationStore()
+  const { categories, ensureLoaded: ensureCategoriesLoaded } = useCategoryStore()
+  const { events, ensureLoaded: ensureEventsLoaded } = useEventStore()
 
   // ── Local UI state ──────────────────────────────────────────────────────
   const [searchTerm, setSearchTerm] = useState('')
@@ -94,6 +99,8 @@ function AdminDashboardContent() {
     fetchDocuments()
     fetchUsers()
     ensureAdminsLoaded()
+    ensureCategoriesLoaded()
+    ensureEventsLoaded()
   }, [user])
 
   useEffect(() => {
@@ -288,21 +295,34 @@ function AdminDashboardContent() {
       {/* ── DASHBOARD TAB ─────────────────────────────────────── */}
       {tab === 'dashboard' && (
         <div className="space-y-8">
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Admin Dashboard</h1>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Admin Dashboard</h1>
             {usingMock && (
-              <span className="text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 px-3 py-1 rounded-full">
+              <span className="text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 px-3 py-1 rounded-full self-start sm:self-auto">
                 Demo Mode (backend offline)
               </span>
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card title="Total Documents" value={stats?.totalDocuments ?? documents.length} icon={<FileText size={32} />} />
-            <Card title="Active Documents" value={stats?.activeDocuments ?? activeDocs.length} icon={<FileText size={32} />} />
-            <Card title="Archived Documents" value={stats?.archivedDocuments ?? archivedDocs.length} icon={<Archive size={32} />} />
-            <Card title="Recent Uploads (7d)" value={stats?.recentUploads ?? 0} icon={<Upload size={32} />} />
-          </div>
+          {(() => {
+            const trend = (stats?.uploadsOverTime ?? []).slice(-6).map(d => d.value)
+            const recentDelta = trend.length >= 2 ? trend[trend.length - 1] - trend[trend.length - 2] : undefined
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <Card title="Total Documents" value={stats?.totalDocuments ?? documents.length} icon={<FileText size={28} />} />
+                <Card title="Active Documents" value={stats?.activeDocuments ?? activeDocs.length} icon={<FileText size={28} />} />
+                <Card title="Archived Documents" value={stats?.archivedDocuments ?? archivedDocs.length} icon={<Archive size={28} />} />
+                <Card
+                  title="Recent Uploads (7d)"
+                  value={stats?.recentUploads ?? 0}
+                  icon={<Upload size={28} />}
+                  sparkline={trend.length > 1 ? trend : undefined}
+                  delta={recentDelta}
+                  deltaLabel="vs prior period"
+                />
+              </div>
+            )
+          })()}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
@@ -316,16 +336,24 @@ function AdminDashboardContent() {
           </div>
 
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Recent Documents</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Recent Documents</h2>
+              <button
+                onClick={() => router.push('/dashboard/admin?tab=documents')}
+                className="text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
+              >
+                View all →
+              </button>
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b dark:border-gray-700">
-                    <th className="text-left py-3 px-4 text-gray-900 dark:text-white">Title</th>
-                    <th className="text-left py-3 px-4 text-gray-900 dark:text-white">Category</th>
-                    <th className="text-left py-3 px-4 text-gray-900 dark:text-white">Uploader</th>
-                    <th className="text-left py-3 px-4 text-gray-900 dark:text-white">Date</th>
-                    <th className="text-left py-3 px-4 text-gray-900 dark:text-white">Action</th>
+                  <tr className="border-b border-border-subtle dark:border-white/5 bg-gray-50/80 dark:bg-gray-900/40">
+                    <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Title</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Category</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Uploader</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Date</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -336,10 +364,7 @@ function AdminDashboardContent() {
                     <tr key={d.id} className="border-b dark:border-gray-700">
                       <td className="py-3 px-4 text-gray-900 dark:text-white">
                         <span className="inline-flex items-center gap-2">
-                          {(() => {
-                            const ft = documents.find(doc => doc.id === d.id)?.fileType ?? 'pdf'
-                            return <FileTypeIcon fileType={ft} size={18} />
-                          })()}
+                          <FileTypeBadge fileType={documents.find(doc => doc.id === d.id)?.fileType ?? 'pdf'} />
                           <span>{d.title}</span>
                         </span>
                       </td>
@@ -369,8 +394,8 @@ function AdminDashboardContent() {
       {/* ── DOCUMENTS TAB ─────────────────────────────────────── */}
       {tab === 'documents' && (
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Documents</h1>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Documents</h1>
             <Button onClick={() => setUploadModalOpen(true)}>
               <Upload size={20} className="inline mr-2" />
               Upload Document
@@ -386,7 +411,7 @@ function AdminDashboardContent() {
               className="flex-1 min-w-[200px] px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
             />
             <div className="flex gap-2 flex-wrap">
-              {['All', ...mockCategories].map(cat => (
+              {['All', ...categories.map(c => c.name)].map(cat => (
                 <button
                   key={cat}
                   onClick={() => setCategoryFilter(cat)}
@@ -414,6 +439,7 @@ function AdminDashboardContent() {
             onDelete={handleDelete}
             onArchive={handleArchive}
             uploaderNames={uploaderNames}
+            isLoading={documentsLoading}
           />
         </div>
       )}
@@ -421,7 +447,7 @@ function AdminDashboardContent() {
       {/* ── ARCHIVE TAB ──────────────────────────────────────── */}
       {tab === 'archive' && (
         <div className="space-y-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Archive</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Archive</h1>
           <ArchiveList
             documents={archivedDocs}
             archivableDocs={activeDocs}
@@ -434,14 +460,14 @@ function AdminDashboardContent() {
         </div>
       )}
 
-      {/* ── ADMINISTRATIONS TAB ──────────────────────────────── */}
-      {tab === 'administrations' && <AdministrationsPanel />}
+      {/* ── DOCUMENT SETTINGS TAB ────────────────────────────── */}
+      {tab === 'settings' && <DocumentSettingsPanel />}
 
       {/* ── USERS TAB ─────────────────────────────────────────── */}
       {tab === 'users' && (
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">User Management</h1>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">User Management</h1>
             <Button onClick={() => setInviteModalOpen(true)}>
               <Users size={20} className="inline mr-2" />
               Invite User
@@ -457,8 +483,8 @@ function AdminDashboardContent() {
       {/* ── ACTIVITY LOGS TAB ────────────────────────────────── */}
       {tab === 'logs' && (
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Activity Logs</h1>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Activity Logs</h1>
             <Button onClick={handleExportLogs} variant="secondary">
               <Download size={20} className="inline mr-2" />
               Export CSV
@@ -481,7 +507,7 @@ function AdminDashboardContent() {
         isOpen={uploadModalOpen}
         onClose={() => setUploadModalOpen(false)}
         onUpload={handleUpload}
-        allowedCategories={mockCategories}
+        allowedCategories={categories.map(c => c.name)}
       />
 
       <DocumentViewerModal
@@ -513,17 +539,18 @@ function AdminDashboardContent() {
               onChange={e => setEditForm({ ...editForm, category: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
             >
-              {mockCategories.map(c => <option key={c}>{c}</option>)}
+              {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1 text-gray-900 dark:text-white">Event</label>
-            <input
-              type="text"
+            <select
               value={editForm.event}
               onChange={e => setEditForm({ ...editForm, event: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-            />
+            >
+              {events.map(ev => <option key={ev.id} value={ev.name}>{ev.name}</option>)}
+            </select>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1 text-gray-900 dark:text-white">Administration</label>
@@ -602,7 +629,7 @@ function tabLabel(tab: string) {
     dashboard: 'Dashboard',
     documents: 'Documents',
     archive: 'Archive',
-    administrations: 'Administrations',
+    settings: 'Document Settings',
     users: 'Users',
     logs: 'Activity Logs',
   }

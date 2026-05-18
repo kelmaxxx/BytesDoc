@@ -19,10 +19,10 @@ import DocumentViewerModal from '@/components/dashboard/DocumentViewerModal'
 import UploadModal from '@/components/dashboard/UploadModal'
 import { FileText, DollarSign, Upload } from 'lucide-react'
 import { Document } from '@/types'
-import { mockEvents } from '@/lib/mockData'
 import { toast } from '@/lib/stores/toastStore'
 import { confirmDialog } from '@/lib/stores/confirmStore'
 import { useAdministrationStore } from '@/lib/stores/administrationStore'
+import { useEventStore } from '@/lib/stores/eventStore'
 
 export default function FinanceDashboard() {
   return (
@@ -42,8 +42,9 @@ function FinanceDashboardContent() {
   const { users } = useUserStore()
   const { addLog } = useActivityStore()
   const { administrations, ensureLoaded: ensureAdminsLoaded } = useAdministrationStore()
+  const { events, ensureLoaded: ensureEventsLoaded } = useEventStore()
 
-  useEffect(() => { ensureAdminsLoaded() }, [ensureAdminsLoaded])
+  useEffect(() => { ensureAdminsLoaded(); ensureEventsLoaded() }, [ensureAdminsLoaded, ensureEventsLoaded])
 
   const FINANCE_CATEGORIES = ['Budgets', 'Financial Records', 'Reports'] as const
 
@@ -179,7 +180,7 @@ function FinanceDashboardContent() {
     <DashboardLayout tabs={tabs} activeTab={tab === 'documents' ? 'Documents' : tab === 'archive' ? 'Archive' : 'Dashboard'}>
       {tab === 'dashboard' && (
         <div className="space-y-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Finance Dashboard</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Finance Dashboard</h1>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card title="Financial Documents" value={totalDocs} icon={<FileText size={32} />} />
@@ -222,8 +223,8 @@ function FinanceDashboardContent() {
 
       {tab === 'documents' && (
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Financial Documents</h1>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Financial Documents</h1>
             <Button onClick={() => setUploadModalOpen(true)}>
               <Upload size={20} className="inline mr-2" />
               Upload Document
@@ -255,7 +256,7 @@ function FinanceDashboardContent() {
 
       {tab === 'archive' && (
         <div className="space-y-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Financial Archive (Read Only)</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Financial Archive (Read Only)</h1>
           <ArchiveList
             documents={filteredDocs}
             onView={handleView}
@@ -306,7 +307,7 @@ function FinanceDashboardContent() {
               onChange={e => setEditForm({ ...editForm, event: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
             >
-              {mockEvents.map(evt => <option key={evt} value={evt}>{evt}</option>)}
+              {events.map(evt => <option key={evt.id} value={evt.name}>{evt.name}</option>)}
             </select>
           </div>
           <div>
