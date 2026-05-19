@@ -1,78 +1,109 @@
 import Link from 'next/link'
-import { FileText, Lock, Archive, Activity, ArrowRight, Github } from 'lucide-react'
+import Image from 'next/image'
+import { FileText, Lock, Archive, Activity, ArrowRight, Github, Mail } from 'lucide-react'
 
 export default function LandingPage() {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#0d0d0d] text-white">
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.05]"
-        style={{
-          backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)',
-          backgroundSize: '22px 22px',
-        }}
-      />
-      <div className="pointer-events-none absolute -top-40 -left-32 h-96 w-96 rounded-full bg-white/[0.05] blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-40 left-1/3 h-96 w-96 rounded-full bg-white/[0.03] blur-3xl" />
+    <div className="relative min-h-screen w-full overflow-hidden font-sans text-white">
+      {/* Photo background + readability overlay */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="/graybg1.jpg"
+          alt=""
+          fill
+          priority
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/55 to-black/80" />
+      </div>
 
-      <div className="relative container mx-auto px-4 py-20">
-        <div className="text-center mb-20">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur-sm px-4 py-1.5 text-sm text-white/90 ring-1 ring-white/20 mb-6">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-            BYTES Student Council
-          </div>
-          <h1 className="text-6xl md:text-7xl font-bold text-white mb-4 tracking-tight">
-            BytesDoc
-          </h1>
-          <p className="text-lg md:text-xl text-gray-200 mb-10 max-w-2xl mx-auto">
-            Centralized document management with role-based access, audit logs, and archiving — built for the council.
-          </p>
-          <div className="flex items-center justify-center gap-3">
-            <Link
-              href="/login"
-              className="group inline-flex items-center gap-2 bg-white text-black px-7 py-3 rounded-lg font-semibold shadow-elevated hover:bg-gray-100 transition"
-            >
-              Login
-              <ArrowRight size={18} className="transition-transform group-hover:translate-x-0.5" />
-            </Link>
-            <a
-              href="https://github.com/0-0april/BytesDoc"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 bg-white/[0.06] text-white px-7 py-3 rounded-lg font-semibold ring-1 ring-white/15 backdrop-blur-sm hover:bg-white/[0.1] hover:ring-white/25 transition"
-            >
-              <Github size={18} />
-              View on GitHub
-            </a>
-          </div>
-        </div>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-          {features.map(f => (
-            <div
-              key={f.title}
-              className="group bg-white/[0.04] backdrop-blur-sm p-6 rounded-xl text-white ring-1 ring-white/10 hover:bg-white/[0.07] hover:ring-white/25 hover:-translate-y-0.5 transition-all duration-200"
-            >
-              <div className="inline-flex items-center justify-center rounded-lg bg-white/[0.06] p-3 mb-4 ring-1 ring-white/10">
-                <f.icon className="w-6 h-6 text-gray-200" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">{f.title}</h3>
-              <p className="text-sm text-gray-200/90 leading-relaxed">{f.body}</p>
+      {/* CONTENT */}
+      <div className="relative z-10 flex min-h-screen flex-col">
+        {/* Top nav */}
+        <header className="w-full">
+          <div className="mx-auto flex w-full max-w-6xl items-center px-5 py-5 sm:px-8 sm:py-6">
+            <div className="flex items-center gap-2.5">
+              <Image
+                src="/byteslogo1.png"
+                alt="BYTES Student Council"
+                width={36}
+                height={36}
+                priority
+                className="rounded-sm"
+              />
+              <span className="text-base font-bold uppercase tracking-tighter">BytesDoc</span>
             </div>
-          ))}
-        </div>
+          </div>
+        </header>
 
-        <footer className="mt-24 flex flex-col items-center gap-2 text-sm text-white/70">
-          <p>Contact: info@bytes.com</p>
-          <p>&copy; 2024 BYTES Student Council. All rights reserved.</p>
-          <a
-            href="https://github.com/0-0april/BytesDoc"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1.5 hover:text-white transition"
-          >
-            <Github size={14} />
-            Source code
-          </a>
+        {/* Hero */}
+        <main className="flex flex-1 flex-col items-center justify-center px-5 sm:px-8 pt-6 pb-16">
+          <div className="w-full max-w-6xl">
+            <div className="mx-auto max-w-3xl text-center">
+              <div className="mx-auto mb-5 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-white ring-1 ring-white/20 backdrop-blur-sm">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                BYTES Student Council
+              </div>
+
+              <h1 className="text-5xl font-bold uppercase leading-[0.95] tracking-tighter sm:text-6xl md:text-7xl lg:text-8xl">
+                BytesDoc
+              </h1>
+
+              <p className="mx-auto mt-5 max-w-xl text-base text-gray-200 sm:text-lg md:text-xl">
+                Centralized document management for the council — role-based access, audit logs, and archiving in one place.
+              </p>
+
+              <div className="mt-8 flex justify-center">
+                <Link
+                  href="/login"
+                  className="group inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-white px-10 py-3 text-base font-semibold text-primary shadow-elevated hover:bg-gray-100 active:scale-[0.98] transition"
+                >
+                  Login
+                  <ArrowRight size={18} className="transition-transform group-hover:translate-x-0.5" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Feature grid */}
+            <div className="mt-16 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
+              {features.map((f) => (
+                <div
+                  key={f.title}
+                  className="group rounded-2xl bg-primary/80 p-5 ring-1 ring-white/10 backdrop-blur-md shadow-elevated hover:bg-accent/85 hover:-translate-y-0.5 transition-all duration-200"
+                >
+                  <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 ring-1 ring-white/15 group-hover:bg-white/20 transition-colors">
+                    <f.icon className="h-5 w-5 text-gray-100" />
+                  </div>
+                  <h3 className="text-base font-bold tracking-tight">{f.title}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-gray-300">{f.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </main>
+
+        {/* Footer */}
+        <footer className="border-t border-white/10 bg-black/30 backdrop-blur-sm">
+          <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-2 px-5 py-5 sm:flex-row sm:px-8">
+            <p className="text-xs text-white/70">
+              &copy; 2024 BYTES Student Council. All rights reserved.
+            </p>
+            <div className="flex items-center gap-4 text-xs text-white/70">
+              <a href="mailto:info@bytes.com" className="inline-flex items-center gap-1.5 hover:text-white transition">
+                <Mail size={12} />
+                info@bytes.com
+              </a>
+              <a
+                href="https://github.com/0-0april/BytesDoc"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 hover:text-white transition"
+              >
+                <Github size={12} />
+                Source
+              </a>
+            </div>
+          </div>
         </footer>
       </div>
     </div>
@@ -80,7 +111,7 @@ export default function LandingPage() {
 }
 
 const features = [
-  { icon: FileText, title: 'Secure Upload', body: 'Upload PDFs and DOCX with role-based visibility and 10 MB cap.' },
+  { icon: FileText, title: 'Secure Upload', body: 'PDF and DOCX uploads with a 10 MB cap and role-based visibility.' },
   { icon: Lock, title: 'Role-Based Access', body: 'Chief Minister, Secretary, Finance, and Members each see what they should.' },
   { icon: Archive, title: 'Document Archiving', body: 'Archive past administrations into a read-only history.' },
   { icon: Activity, title: 'Activity Logs', body: 'Every login, upload, view, and download recorded for the audit trail.' },

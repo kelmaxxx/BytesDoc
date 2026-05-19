@@ -19,7 +19,7 @@ import UploadModal from '@/components/dashboard/UploadModal'
 import UserTable from '@/components/dashboard/UserTable'
 import ActivityLogTable from '@/components/dashboard/ActivityLogTable'
 import DocumentSettingsPanel from '@/components/dashboard/DocumentSettingsPanel'
-import FileTypeIcon from '@/components/ui/FileTypeIcon'
+import { FileTypeBadge } from '@/components/ui/FileTypeIcon'
 import { useAdministrationStore } from '@/lib/stores/administrationStore'
 import { useCategoryStore } from '@/lib/stores/categoryStore'
 import { useEventStore } from '@/lib/stores/eventStore'
@@ -295,10 +295,10 @@ function AdminDashboardContent() {
       {/* ── DASHBOARD TAB ─────────────────────────────────────── */}
       {tab === 'dashboard' && (
         <div className="space-y-8">
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Admin Dashboard</h1>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Admin Dashboard</h1>
             {usingMock && (
-              <span className="text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 px-3 py-1 rounded-full">
+              <span className="text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 px-3 py-1 rounded-full self-start sm:self-auto">
                 Demo Mode (backend offline)
               </span>
             )}
@@ -336,7 +336,15 @@ function AdminDashboardContent() {
           </div>
 
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Recent Documents</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Recent Documents</h2>
+              <button
+                onClick={() => router.push('/dashboard/admin?tab=documents')}
+                className="text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
+              >
+                View all →
+              </button>
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -356,10 +364,7 @@ function AdminDashboardContent() {
                     <tr key={d.id} className="border-b dark:border-gray-700">
                       <td className="py-3 px-4 text-gray-900 dark:text-white">
                         <span className="inline-flex items-center gap-2">
-                          {(() => {
-                            const ft = documents.find(doc => doc.id === d.id)?.fileType ?? 'pdf'
-                            return <FileTypeIcon fileType={ft} size={18} />
-                          })()}
+                          <FileTypeBadge fileType={documents.find(doc => doc.id === d.id)?.fileType ?? 'pdf'} />
                           <span>{d.title}</span>
                         </span>
                       </td>
@@ -389,8 +394,8 @@ function AdminDashboardContent() {
       {/* ── DOCUMENTS TAB ─────────────────────────────────────── */}
       {tab === 'documents' && (
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Documents</h1>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Documents</h1>
             <Button onClick={() => setUploadModalOpen(true)}>
               <Upload size={20} className="inline mr-2" />
               Upload Document
@@ -442,7 +447,7 @@ function AdminDashboardContent() {
       {/* ── ARCHIVE TAB ──────────────────────────────────────── */}
       {tab === 'archive' && (
         <div className="space-y-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Archive</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Archive</h1>
           <ArchiveList
             documents={archivedDocs}
             archivableDocs={activeDocs}
@@ -461,8 +466,8 @@ function AdminDashboardContent() {
       {/* ── USERS TAB ─────────────────────────────────────────── */}
       {tab === 'users' && (
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">User Management</h1>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">User Management</h1>
             <Button onClick={() => setInviteModalOpen(true)}>
               <Users size={20} className="inline mr-2" />
               Invite User
@@ -478,8 +483,8 @@ function AdminDashboardContent() {
       {/* ── ACTIVITY LOGS TAB ────────────────────────────────── */}
       {tab === 'logs' && (
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Activity Logs</h1>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Activity Logs</h1>
             <Button onClick={handleExportLogs} variant="secondary">
               <Download size={20} className="inline mr-2" />
               Export CSV
