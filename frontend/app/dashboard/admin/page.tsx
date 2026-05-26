@@ -19,11 +19,10 @@ import UploadModal from '@/components/dashboard/UploadModal'
 import UserTable from '@/components/dashboard/UserTable'
 import ActivityLogTable from '@/components/dashboard/ActivityLogTable'
 import DocumentSettingsPanel from '@/components/dashboard/DocumentSettingsPanel'
-import { FileTypeBadge } from '@/components/ui/FileTypeIcon'
 import { useAdministrationStore } from '@/lib/stores/administrationStore'
 import { useCategoryStore } from '@/lib/stores/categoryStore'
 import { useEventStore } from '@/lib/stores/eventStore'
-import { FileText, Archive, Upload, Users, Activity, Download, ChevronDown } from 'lucide-react'
+import { FileText, Archive, Upload, Users, Download, ChevronDown, FileCheck, CalendarClock, ArrowRight } from 'lucide-react'
 import { Document, User } from '@/types'
 import { apiGetDashboardStats, DashboardStats } from '@/lib/api'
 import { mockCategories } from '@/lib/mockData'
@@ -31,6 +30,8 @@ import { toast } from '@/lib/stores/toastStore'
 import { confirmDialog } from '@/lib/stores/confirmStore'
 import FolderExplorer from '@/components/dashboard/FolderExplorer'
 import { useFolderStore } from '@/lib/stores/folderStore'
+import FileTypeIcon, { fileTypeMeta } from '@/components/ui/FileTypeIcon'
+import Reveal from '@/components/ui/Reveal'
 
 const TABS = [
   { name: 'Dashboard', href: '/dashboard/admin' },
@@ -89,8 +90,6 @@ function AdminDashboardContent() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [isInviting, setIsInviting] = useState(false)
 
-  // Welcome Intro states
-  const [showSummary, setShowSummary] = useState(false)
   const [uploadPrefill, setUploadPrefill] = useState<{ category: string; administration: string; event?: string } | null>(null)
   const [targetFolderId, setTargetFolderId] = useState<string | null>(null)
 
@@ -170,6 +169,17 @@ function AdminDashboardContent() {
     action: r.action as any,
     documentId: r.documentId ?? undefined,
     timestamp: r.timestamp,
+  }))
+
+  // Dashboard derived values
+  const trend = (stats?.uploadsOverTime ?? []).slice(-6).map(d => d.value)
+  const recentDelta = trend.length >= 2 ? trend[trend.length - 1] - trend[trend.length - 2] : undefined
+  const recentDocs = stats?.recentDocuments ?? activeDocs.slice(0, 5).map(d => ({
+    id: d.id,
+    title: d.title,
+    category: d.category,
+    uploadDate: d.uploadDate,
+    uploaderName: uploaderNames[d.uploadedBy] ?? 'Unknown',
   }))
 
   // ── Handlers ────────────────────────────────────────────────────────────
@@ -308,153 +318,213 @@ function AdminDashboardContent() {
     <DashboardLayout tabs={TABS} activeTab={tabLabel(tab)}>
       {/* ── DASHBOARD TAB ─────────────────────────────────────── */}
       {tab === 'dashboard' && (
-        <div className="space-y-8">
-          {/* Welcome Intro Section */}
-          <div className="bg-gradient-to-r from-[#0A2647] to-[#1E3A5F] text-white p-8 rounded-2xl shadow-xl relative overflow-hidden">
-            <div className="absolute right-0 bottom-0 opacity-10 pointer-events-none transform translate-y-1/4 translate-x-1/4">
-              <FileText size={350} />
+        <div className="space-y-16 sm:space-y-20">
+          {/* ─── Hero (near full-viewport, dark gray brand) ─── */}
+          <section
+            className="relative -mx-4 -mt-8 px-4 sm:px-6 lg:px-10 flex flex-col bg-gradient-to-b from-[#1a1a1a] via-[#161616] to-[#0d0d0d] text-white overflow-hidden"
+            style={{ minHeight: 'calc(100vh - 4rem)' }}
+          >
+            {/* Subtle dot grid */}
+            <div
+              className="absolute inset-0 opacity-[0.07] pointer-events-none"
+              style={{
+                backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)',
+                backgroundSize: '24px 24px',
+              }}
+              aria-hidden="true"
+            />
+            {/* Soft accent orbs */}
+            <div
+              className="absolute -top-40 -right-40 h-[28rem] w-[28rem] rounded-full bg-white/[0.04] blur-3xl pointer-events-none"
+              aria-hidden="true"
+            />
+            <div
+              className="absolute -bottom-40 -left-32 h-[32rem] w-[32rem] rounded-full bg-white/[0.03] blur-3xl pointer-events-none"
+              aria-hidden="true"
+            />
+            {/* Watermark file icon */}
+            <div
+              className="absolute right-[-80px] top-1/2 -translate-y-1/2 opacity-[0.04] pointer-events-none hidden lg:block"
+              aria-hidden="true"
+            >
+              <FileText size={520} strokeWidth={1} />
             </div>
-            <div className="max-w-2xl relative z-10 space-y-4">
-              <span className="bg-blue-500/25 text-blue-200 border border-blue-400/30 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider">
+
+            {/* Centered content */}
+            <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center max-w-4xl mx-auto py-16">
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/[0.08] ring-1 ring-white/15 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-gray-200 backdrop-blur-sm">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 Official MSU BYTES Platform
               </span>
-              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-                Welcome to BytesDoc
+
+              <h1 className="mt-6 text-5xl sm:text-7xl md:text-8xl font-extrabold uppercase tracking-tighter leading-[0.9]">
+                Welcome,
+                <br />
+                <span className="bg-gradient-to-br from-white via-gray-200 to-gray-500 bg-clip-text text-transparent">
+                  {user.fullName.split(' ')[0]}
+                </span>
               </h1>
-              <p className="text-blue-100 text-sm sm:text-base leading-relaxed">
-                BytesDoc serves as the central student council archive. It is designed to catalog, organize,
-                and securely store executive files across diverse categories like Finance, Secretary, and Elections, ensuring perfect administrative continuity.
+
+              <p className="mt-6 max-w-2xl text-base sm:text-lg text-gray-300 leading-relaxed">
+                BytesDoc is the central archive for the BYTES Student Council — catalog,
+                organize, and securely store executive files across Finance, Secretary,
+                and Elections.
               </p>
-              <div className="flex flex-wrap gap-3 pt-2">
-                <Button
+
+              <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+                <button
+                  type="button"
                   onClick={() => router.push('/dashboard/admin?tab=documents')}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium border-0 px-6"
+                  className="group inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3 text-sm font-semibold text-primary shadow-elevated hover:bg-gray-100 active:scale-[0.98] transition"
                 >
                   Browse Folders
-                </Button>
-                <Button
-                  onClick={() => setShowSummary(!showSummary)}
-                  variant="secondary"
-                  className="bg-white/10 hover:bg-white/20 border-white/20 text-white font-medium px-6"
-                >
-                  {showSummary ? 'Hide Statistics' : 'View Statistics'}
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Slide Down stats trigger */}
-          {!showSummary && (
-            <div
-              className="flex flex-col items-center justify-center pt-4 animate-bounce cursor-pointer group"
-              onClick={() => setShowSummary(true)}
-            >
-              <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 group-hover:text-primary transition">
-                Slide down or click to view statistics
-              </span>
-              <ChevronDown size={20} className="text-gray-400 group-hover:text-primary mt-1 transition" />
-            </div>
-          )}
-
-          {/* Summary section (smoothly toggled) */}
-          {showSummary && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-top-4 duration-500">
-              <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-700/50 pb-2">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white">System Summary Stats</h2>
+                  <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
+                </button>
                 <button
-                  onClick={() => setShowSummary(false)}
-                  className="text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-red-500 transition"
+                  type="button"
+                  onClick={() => router.push('/dashboard/admin?tab=users')}
+                  className="inline-flex items-center gap-2 rounded-xl bg-white/[0.08] hover:bg-white/[0.12] ring-1 ring-white/15 px-7 py-3 text-sm font-semibold text-white active:scale-[0.98] transition backdrop-blur-sm"
                 >
-                  Hide Stats ▲
+                  <Users size={16} />
+                  Manage Users
                 </button>
               </div>
-
-              {(() => {
-                const trend = (stats?.uploadsOverTime ?? []).slice(-6).map(d => d.value)
-                const recentDelta = trend.length >= 2 ? trend[trend.length - 1] - trend[trend.length - 2] : undefined
-                return (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <Card title="Total Documents" value={stats?.totalDocuments ?? documents.length} icon={<FileText size={28} />} />
-                    <Card title="Active Documents" value={stats?.activeDocuments ?? activeDocs.length} icon={<FileText size={28} />} />
-                    <Card title="Archived Documents" value={stats?.archivedDocuments ?? archivedDocs.length} icon={<Archive size={28} />} />
-                    <Card
-                      title="Recent Uploads (7d)"
-                      value={stats?.recentUploads ?? 0}
-                      icon={<Upload size={28} />}
-                      sparkline={trend.length > 1 ? trend : undefined}
-                      delta={recentDelta}
-                      deltaLabel="vs prior period"
-                    />
-                  </div>
-                )
-              })()}
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Documents per Category</h2>
-                  <BarChart data={stats?.docsPerCategory ?? []} />
-                </div>
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Uploads over Time</h2>
-                  <LineChart data={stats?.uploadsOverTime ?? []} />
-                </div>
-              </div>
-
-              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Recent Documents</h2>
-                  <button
-                    onClick={() => router.push('/dashboard/admin?tab=documents')}
-                    className="text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
-                  >
-                    View all →
-                  </button>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-border-subtle dark:border-white/5 bg-gray-50/80 dark:bg-gray-900/40">
-                        <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Title</th>
-                        <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Category</th>
-                        <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Uploader</th>
-                        <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Date</th>
-                        <th className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(stats?.recentDocuments ?? activeDocs.slice(0, 5).map(d => ({
-                        id: d.id, title: d.title, category: d.category,
-                        uploadDate: d.uploadDate, uploaderName: uploaderNames[d.uploadedBy] ?? 'Unknown',
-                      }))).map(d => (
-                        <tr key={d.id} className="border-b dark:border-gray-700">
-                          <td className="py-3 px-4 text-gray-900 dark:text-white">
-                            <span className="inline-flex items-center gap-2">
-                              <FileTypeBadge fileType={documents.find(doc => doc.id === d.id)?.fileType ?? 'pdf'} />
-                              <span>{d.title}</span>
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 text-gray-600 dark:text-gray-400">{d.category}</td>
-                          <td className="py-3 px-4 text-gray-600 dark:text-gray-400">{d.uploaderName}</td>
-                          <td className="py-3 px-4 text-gray-600 dark:text-gray-400">
-                            {new Date(d.uploadDate).toLocaleDateString()}
-                          </td>
-                          <td className="py-3 px-4">
-                            <button
-                              onClick={() => handleDownload(documents.find(doc => doc.id === d.id)!)}
-                              className="text-blue-500 hover:text-blue-700"
-                              title="Download"
-                            >
-                              <Download size={18} />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
             </div>
-          )}
+
+            {/* Scroll indicator */}
+            <a
+              href="#stats"
+              className="relative z-10 mx-auto mb-10 flex flex-col items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.25em] text-gray-400 hover:text-white transition"
+            >
+              <span>Scroll for stats</span>
+              <ChevronDown size={18} className="animate-bounce" />
+            </a>
+          </section>
+
+          {/* ─── KPI strip (scroll-reveal with stagger) ─── */}
+          <div id="stats" className="scroll-mt-24 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Reveal delay={0}>
+              <Card
+                title="Total Documents"
+                value={stats?.totalDocuments ?? documents.length}
+                icon={<FileText size={22} />}
+                accent="blue"
+              />
+            </Reveal>
+            <Reveal delay={80}>
+              <Card
+                title="Active Documents"
+                value={stats?.activeDocuments ?? activeDocs.length}
+                icon={<FileCheck size={22} />}
+                accent="emerald"
+              />
+            </Reveal>
+            <Reveal delay={160}>
+              <Card
+                title="Archived Documents"
+                value={stats?.archivedDocuments ?? archivedDocs.length}
+                icon={<Archive size={22} />}
+                accent="amber"
+              />
+            </Reveal>
+            <Reveal delay={240}>
+              <Card
+                title="Recent Uploads (7d)"
+                value={stats?.recentUploads ?? 0}
+                icon={<Upload size={22} />}
+                accent="violet"
+                sparkline={trend.length > 1 ? trend : undefined}
+                delta={recentDelta}
+                deltaLabel="vs prior period"
+              />
+            </Reveal>
+          </div>
+
+          {/* ─── Charts (scroll-reveal) ─── */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Reveal delay={0}>
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-soft border border-border-subtle dark:border-white/5">
+                <div className="flex items-center justify-between mb-5">
+                  <h2 className="text-base font-bold text-gray-900 dark:text-white">Documents per Category</h2>
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-white/[0.06] px-2 py-1 rounded-full">
+                    <FileText size={11} />
+                    All time
+                  </span>
+                </div>
+                <BarChart data={stats?.docsPerCategory ?? []} />
+              </div>
+            </Reveal>
+            <Reveal delay={120}>
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-soft border border-border-subtle dark:border-white/5">
+                <div className="flex items-center justify-between mb-5">
+                  <h2 className="text-base font-bold text-gray-900 dark:text-white">Uploads over Time</h2>
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-white/[0.06] px-2 py-1 rounded-full">
+                    <CalendarClock size={11} />
+                    Last 6 months
+                  </span>
+                </div>
+                <LineChart data={stats?.uploadsOverTime ?? []} />
+              </div>
+            </Reveal>
+          </div>
+
+          {/* ─── Recent documents (scroll-reveal) ─── */}
+          <Reveal>
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-soft border border-border-subtle dark:border-white/5">
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-base font-bold text-gray-900 dark:text-white">Recent Documents</h2>
+                <button
+                  onClick={() => router.push('/dashboard/admin?tab=documents')}
+                  className="text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-white transition"
+                >
+                  View all →
+                </button>
+              </div>
+              {recentDocs.length === 0 ? (
+                <p className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                  No documents uploaded yet.
+                </p>
+              ) : (
+                <ul className="divide-y divide-border-subtle dark:divide-white/5">
+                  {recentDocs.map(d => {
+                    const doc = documents.find(x => x.id === d.id)
+                    const meta = fileTypeMeta(doc?.fileType ?? 'pdf')
+                    return (
+                      <li
+                        key={d.id}
+                        className="group flex items-center gap-4 py-3 px-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors"
+                      >
+                        <div
+                          className="w-1 h-10 rounded-full shrink-0"
+                          style={{ backgroundColor: meta.color }}
+                          aria-hidden="true"
+                        />
+                        <FileTypeIcon fileType={doc?.fileType ?? 'pdf'} size={22} />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-medium text-sm text-gray-900 dark:text-white">{d.title}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 flex items-center gap-1.5 flex-wrap">
+                            <span>{d.category}</span>
+                            <span aria-hidden="true">·</span>
+                            <span>{d.uploaderName}</span>
+                            <span aria-hidden="true">·</span>
+                            <span className="tabular-nums">{new Date(d.uploadDate).toLocaleDateString()}</span>
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => doc && handleDownload(doc)}
+                          className="p-2 rounded-md text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 opacity-60 group-hover:opacity-100 transition"
+                          title="Download"
+                          aria-label={`Download ${d.title}`}
+                        >
+                          <Download size={18} />
+                        </button>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+            </div>
+          </Reveal>
         </div>
       )}
 
