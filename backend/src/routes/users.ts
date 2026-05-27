@@ -11,6 +11,7 @@ interface ProfileRow {
   name: string
   role: { role_name: Role }
   created_at: string
+  status: string
 }
 
 function toUser(p: ProfileRow, auth?: { email_confirmed_at: string | null } | null) {
@@ -23,15 +24,16 @@ function toUser(p: ProfileRow, auth?: { email_confirmed_at: string | null } | nu
     // Fall back to 'active' if auth lookup wasn't available.
     status: auth ? (auth.email_confirmed_at ? 'active' : 'pending') : 'active',
     createdAt: p.created_at,
+    status: p.status ?? 'active',
   }
 }
 
-// GET /api/users — list all users (chief_minister only)
+// GET /api/users — list all users including pending (chief_minister only)
 router.get('/', requireAuth, requireRole('chief_minister'), async (_req, res, next) => {
   try {
     const { data, error } = await supabase
       .from('users')
-      .select('id, email, name, role:roles(role_name), created_at')
+      .select('id, email, name, role:roles(role_name), created_at, status')
       .order('created_at', { ascending: true })
       .returns<ProfileRow[]>()
 
@@ -112,8 +114,8 @@ router.post('/', requireAuth, requireRole('chief_minister'), async (req, res, ne
     // existing profile so the caller sees a clean success.
     const { data, error } = await supabase
       .from('users')
-      .insert({ id: newUserId, email, name, role_id: roleRow.id })
-      .select('id, email, name, role:roles(role_name), created_at')
+      .insert({ id: newUserId, email, name, role_id: roleRow.id, status: 'active' })
+      .select('id, email, name, role:roles(role_name), created_at, status')
       .single<ProfileRow>()
 
     if (error || !data) {
@@ -122,7 +124,7 @@ router.post('/', requireAuth, requireRole('chief_minister'), async (req, res, ne
         // Email has already been re-sent by inviteUserByEmail — return the existing profile.
         const { data: existingById } = await supabase
           .from('users')
-          .select('id, email, name, role:roles(role_name), created_at')
+          .select('id, email, name, role:roles(role_name), created_at, status')
           .eq('id', newUserId)
           .maybeSingle<ProfileRow>()
         if (existingById) {
@@ -147,6 +149,54 @@ router.post('/', requireAuth, requireRole('chief_minister'), async (req, res, ne
   }
 })
 
+// PATCH /api/users/:id/status — approve or reject a pending user (chief_minister only)
+// NOTE: this must be defined BEFORE /:id to avoid Express matching /:id first
+router.patch('/:id/status', requireAuth, requireRole('chief_minister'), async (req: AuthedRequest, res, next) => {
+  try {
+    const { status, role } = req.body ?? {}
+    const VALID_STATUSES = ['active', 'rejected']
+    if (!status || !VALID_STATUSES.includes(status)) {
+      return res.status(400).json({ error: 'status must be active or rejected' })
+    }
+
+    if (status === 'rejected') {
+      await supabase.from('users').delete().eq('id', req.params.id)
+      await supabase.auth.admin.deleteUser(req.params.id).catch(() => {})
+      return res.json({ ok: true })
+    }
+
+    const VALID_ROLES: Role[] = ['chief_minister', 'secretary', 'finance_minister', 'member']
+    if (!role || !VALID_ROLES.includes(role)) {
+      return res.status(400).json({ error: 'role is required when approving' })
+    }
+
+    const { data: roleRow, error: roleErr } = await supabase
+      .from('roles')
+      .select('id')
+      .eq('role_name', role)
+      .single<{ id: number }>()
+
+    if (roleErr || !roleRow) {
+      return res.status(500).json({ error: 'could not resolve role' })
+    }
+
+    const { data, error } = await supabase
+      .from('users')
+      .update({ status: 'active', role_id: roleRow.id })
+      .eq('id', req.params.id)
+      .select('id, email, name, role:roles(role_name), created_at, status')
+      .single<ProfileRow>()
+
+    if (error || !data) {
+      return res.status(404).json({ error: 'user not found' })
+    }
+
+    res.json(toUser(data))
+  } catch (err) {
+    next(err)
+  }
+})
+
 // PATCH /api/users/:id — chief_minister can rename any user
 router.patch('/:id', requireAuth, requireRole('chief_minister'), async (req, res, next) => {
   try {
@@ -158,7 +208,7 @@ router.patch('/:id', requireAuth, requireRole('chief_minister'), async (req, res
       .from('users')
       .update({ name })
       .eq('id', req.params.id)
-      .select('id, email, name, role:roles(role_name), created_at')
+      .select('id, email, name, role:roles(role_name), created_at, status')
       .single<ProfileRow>()
 
     if (error || !data) {
@@ -198,7 +248,7 @@ router.put('/:id/role', requireAuth, requireRole('chief_minister'), async (req: 
       .from('users')
       .update({ role_id: roleRow.id })
       .eq('id', req.params.id)
-      .select('id, email, name, role:roles(role_name), created_at')
+      .select('id, email, name, role:roles(role_name), created_at, status')
       .single<ProfileRow>()
 
     if (error || !data) {
