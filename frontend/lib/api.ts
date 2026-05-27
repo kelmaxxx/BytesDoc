@@ -326,6 +326,17 @@ export async function apiDeleteEvent(id: string) {
 
 // ─── Users ──────────────────────────────────────────────────────────────────
 
+export async function apiUpdateUserStatus(
+  userId: string,
+  status: 'active' | 'rejected',
+  role?: import('@/types').Role
+) {
+  return apiFetch<import('@/types').User>(`/users/${userId}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status, role }),
+  })
+}
+
 export async function apiGetUsers() {
   return apiFetch<import('@/types').User[]>('/users')
 }
@@ -433,6 +444,24 @@ export interface DashboardStats {
 
 export async function apiGetDashboardStats() {
   return apiFetch<DashboardStats>('/dashboard/stats')
+}
+
+// ─── Recycle Bin ────────────────────────────────────────────────────────────
+
+export async function apiGetTrash() {
+  return apiFetch<import('@/types').Document[]>('/trash')
+}
+
+export async function apiTrashDocument(id: string) {
+  return apiFetch<{ ok: boolean }>(`/trash/${id}`, { method: 'POST' })
+}
+
+export async function apiRestoreDocument(id: string) {
+  return apiFetch<{ ok: boolean }>(`/trash/${id}/restore`, { method: 'POST' })
+}
+
+export async function apiPermanentDeleteDocument(id: string) {
+  return apiFetch<void>(`/trash/${id}`, { method: 'DELETE' })
 }
 
 // ─── Backend health check ────────────────────────────────────────────────────

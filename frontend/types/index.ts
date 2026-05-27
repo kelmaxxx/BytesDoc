@@ -19,6 +19,8 @@ export interface Document {
   filePath: string
   is_archived: boolean
   is_locked: boolean
+  is_deleted: boolean
+  deleted_at?: string | null
   fileType: 'pdf' | 'docx'
 }
 
@@ -45,7 +47,7 @@ export interface Event {
 export interface ActivityLog {
   id: string
   userId: string
-  action: 'upload' | 'download' | 'view' | 'archive' | 'lock' | 'unlock' | 'login'
+  action: 'upload' | 'download' | 'view' | 'archive' | 'lock' | 'unlock' | 'login' | 'delete' | 'restore'
   documentId?: string
   timestamp: string
 }
