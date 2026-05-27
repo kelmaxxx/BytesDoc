@@ -11,6 +11,7 @@ import eventsRouter from './routes/events'
 import usersRouter from './routes/users'
 import activityLogsRouter from './routes/activitylogs'
 import dashboardRouter from './routes/dashboard'
+import trashRouter from './routes/trash'
 import archiveRouter from './routes/archive'
 import { errorHandler } from './middleware/error'
 
@@ -25,7 +26,8 @@ app.use(express.json({ limit: '10mb' }))
 app.use('/api', healthRouter)
 app.use('/api/auth', authRouter)
 app.use('/api/documents', documentsRouter)
-app.use('/api/documents', archiveRouter)   // archive sub-routes on /api/documents/:id/archive
+app.use('/api/documents', archiveRouter)
+app.use('/api/trash', trashRouter)
 app.use('/api/administrations', administrationsRouter)
 app.use('/api/categories', categoriesRouter)
 app.use('/api/events', eventsRouter)
