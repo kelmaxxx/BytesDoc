@@ -112,11 +112,12 @@ export default function AdministrationsPanel() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Administrations</h1>
+      <div className="flex justify-between items-center gap-2 flex-wrap">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Administrations</h1>
         <Button onClick={() => setShowAdd(s => !s)}>
           <Plus size={18} className="inline mr-1" />
-          {showAdd ? 'Cancel' : 'Add Administration'}
+          <span className="hidden sm:inline">{showAdd ? 'Cancel' : 'Add Administration'}</span>
+          <span className="sm:hidden">{showAdd ? 'Cancel' : 'Add'}</span>
         </Button>
       </div>
 

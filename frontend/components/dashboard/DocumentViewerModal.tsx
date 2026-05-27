@@ -93,21 +93,22 @@ export default function DocumentViewerModal({
       width={820}
       footer={
         <>
-          <span className="mr-auto text-[11px] text-gray-500 dark:text-gray-400">
+          <span className="w-full sm:w-auto sm:mr-auto order-last sm:order-none text-[11px] text-gray-500 dark:text-gray-400 truncate">
             Uploaded by {uploaderName ?? doc.uploadedBy} · {relativeTime(doc.uploadDate)}
           </span>
           <Button variant="outline" icon={Download} onClick={openFullScreen}>
             Download
           </Button>
           <Button variant="primary" icon={ExternalLink} onClick={openFullScreen}>
-            Open full screen
+            <span className="hidden sm:inline">Open full screen</span>
+            <span className="sm:hidden">Open</span>
           </Button>
         </>
       }
     >
       <div className="flex flex-col sm:flex-row gap-4">
         {/* Left column: versions + metadata */}
-        <div className="w-full sm:w-44 sm:shrink-0">
+        <div className="w-full sm:w-44 sm:shrink-0 order-2 sm:order-1">
           <div className="text-[10px] font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-2">
             Versions
           </div>
@@ -150,7 +151,7 @@ export default function DocumentViewerModal({
         </div>
 
         {/* Right column: paper preview */}
-        <div className="flex-1 rounded-lg ring-1 ring-border-subtle dark:ring-white/10 bg-gray-100 dark:bg-black/40 p-3 h-[360px] overflow-hidden">
+        <div className="order-1 sm:order-2 flex-1 rounded-lg ring-1 ring-border-subtle dark:ring-white/10 bg-gray-100 dark:bg-black/40 p-3 h-[55vh] sm:h-[360px] min-h-[260px] overflow-hidden">
           <div className="bg-white rounded-sm shadow ring-1 ring-black/[0.06] h-full overflow-hidden relative">
             {loading && (
               <div className="h-full grid place-items-center text-sm text-gray-500">
