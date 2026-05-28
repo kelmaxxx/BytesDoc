@@ -15,7 +15,7 @@ interface DocumentTableProps {
   onView: (doc: Document) => void
   onDownload: (doc: Document) => void
   onEdit?: (doc: Document) => void
-  onDelete?: (doc: Document) => void
+  onTrash?: (doc: Document) => void
   onArchive?: (doc: Document) => void
   uploaderNames?: Record<string, string>
   isLoading?: boolean
@@ -29,7 +29,7 @@ export default function DocumentTable({
   onView,
   onDownload,
   onEdit,
-  onDelete,
+  onTrash,
   onArchive,
   uploaderNames = {},
   isLoading = false,
@@ -104,8 +104,8 @@ export default function DocumentTable({
                   <Edit size={18} />
                 </ActionButton>
               )}
-              {!doc.is_archived && !doc.is_locked && canDelete(doc) && onDelete && (
-                <ActionButton onClick={() => onDelete(doc)} title="Delete" colorClass="text-red-600 dark:text-red-400">
+              {!doc.is_archived && !doc.is_locked && canDelete(doc) && onTrash && (
+                <ActionButton onClick={() => onTrash(doc)} title="Move to recycle bin" colorClass="text-red-600 dark:text-red-400">
                   <Trash2 size={18} />
                 </ActionButton>
               )}
@@ -173,8 +173,8 @@ export default function DocumentTable({
                         <Edit size={18} />
                       </button>
                     )}
-                    {!doc.is_archived && !doc.is_locked && canDelete(doc) && onDelete && (
-                      <button onClick={() => onDelete(doc)} className="text-red-500 hover:text-red-700" title="Delete">
+                    {!doc.is_archived && !doc.is_locked && canDelete(doc) && onTrash && (
+                      <button onClick={() => onTrash(doc)} className="text-red-500 hover:text-red-700" title="Move to recycle bin">
                         <Trash2 size={18} />
                       </button>
                     )}
